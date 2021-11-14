@@ -9,7 +9,7 @@ class GuildHolder {
     this.watchedServers = new Map()
 
     this.loadData().catch(e => {
-      console.error(e)
+      console.log('Could not load config for guild ' + this.guild.name)
     })
   }
 

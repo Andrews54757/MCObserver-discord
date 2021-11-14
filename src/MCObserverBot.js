@@ -3,6 +3,8 @@ const GuildHolder = require('./GuildHolder')
 const MinecraftServerTracker = require('./track/MinecraftServerTracker')
 const GuiUtils = require('./util/GuiUtils')
 const CommandUtils = require('./util/CommandUtils')
+const fs = require('fs/promises')
+const path = require('path')
 
 class MCObserverBot {
   constructor (config) {
@@ -35,6 +37,10 @@ class MCObserverBot {
     this.commands = await CommandUtils.getCommands()
     this.buttons = await GuiUtils.getButtons()
     this.menus = await GuiUtils.getMenus()
+
+    await fs.mkdir(path.join(__dirname, '..', 'config')).catch((e) => {
+
+    })
     this.client.once('ready', async () => {
       this.ready = true
 
