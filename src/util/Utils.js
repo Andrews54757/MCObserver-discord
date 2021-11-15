@@ -1,3 +1,5 @@
+const EditPerms = require('../enum/EditPerms')
+
 class Utils {
   static formatTime (d) {
     const seconds = d % 60
@@ -35,6 +37,20 @@ class Utils {
       return true
     }
     return false
+  }
+
+  static hasEditPerms (interaction, bot) {
+    if (this.hasPerms(interaction)) return true
+    const guildId = interaction.guildId
+    const guildHolder = bot.getGuildHolder(guildId)
+
+    const perChannel = guildHolder.getConfig('edit_permission_channel') || {}
+    if (perChannel[interaction.channelId] === EditPerms.ALLOWED) {
+      return true
+    } else if (perChannel[interaction.channelId] === EditPerms.FORBIDDEN) {
+      return false
+    }
+    return guildHolder.getConfig('edit_permission_default') === EditPerms.ALLOWED
   }
 
   static compareVersion (ver1, ver2) {

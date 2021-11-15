@@ -1,4 +1,5 @@
 const { MessageActionRow, MessageButton } = require('discord.js')
+const Utils = require('../util/Utils')
 
 module.exports = class UnwatchButton {
   static getName () {
@@ -10,6 +11,11 @@ module.exports = class UnwatchButton {
   }
 
   static execute (interaction, bot, name) {
+    if (!Utils.hasEditPerms(interaction, bot)) {
+      this.replySilent('You do not have permission to use this button!')
+      return
+    }
+
     const guildId = interaction.guildId
     const guildHolder = bot.getGuildHolder(guildId)
 

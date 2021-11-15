@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders')
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js')
+const EditPerms = require('../enum/EditPerms')
 const ServerStatus = require('../enum/ServerStatus')
 const Utils = require('../util/Utils')
 const { formatTime } = require('../util/Utils')
@@ -36,6 +37,20 @@ module.exports = class MCOCommand {
           .setName('list_all')
           .setDescription('List all watched minecraft servers')
       )
+      .addSubcommand(subcommand =>
+        subcommand.setName('config')
+          .setDescription('Configures MCObserver')
+          .addStringOption(option =>
+            option.setName('edit_permission_default')
+              .setDescription('Sets the default edit permissions for the server')
+              .addChoices([['Allowed', EditPerms.ALLOWED], ['Forbidden', EditPerms.FORBIDDEN]])
+          )
+          .addStringOption(option =>
+            option.setName('edit_permission_channel')
+              .setDescription('Sets the edit permissions for the channel')
+              .addChoices([['Allowed', EditPerms.ALLOWED], ['Forbidden', EditPerms.FORBIDDEN], ['Default', EditPerms.DEFAULT]])
+          )
+      )
   }
 
   static replySilent (interaction, message) {
@@ -45,6 +60,10 @@ module.exports = class MCOCommand {
   static async execute (interaction, bot) {
     switch (interaction.options.getSubcommand()) {
       case 'observe': {
+        if (!Utils.hasEditPerms(interaction, bot)) {
+          this.replySilent(interaction, 'You do not have permission to use this command!')
+          return
+        }
         const unfilteredName = interaction.options.getString('name')
         const name = unfilteredName.replace(/[^a-zA-Z0-9_\-[\]()]/g, '')
 
@@ -81,7 +100,31 @@ module.exports = class MCOCommand {
         this.listServers(true, interaction, bot)
         break
       }
+      case 'config': {
+        this.configure(interaction, bot)
+        break
+      }
     }
+  }
+
+  static async configure (interaction, bot) {
+    const guildId = interaction.guildId
+    const guildHolder = bot.getGuildHolder(guildId)
+    if (!Utils.hasPerms(interaction)) {
+      this.replySilent(interaction, 'You do not have permission to use this command!')
+      return
+    }
+    const editPermDefault = interaction.options.getString('edit_permission_default')
+    const editPermChannel = interaction.options.getString('edit_permission_channel')
+    if (editPermDefault !== null) {
+      guildHolder.setConfig('edit_permission_default', editPermDefault)
+    }
+    if (editPermChannel !== null) {
+      const conf = guildHolder.getConfig('edit_permission_channel') || {}
+      conf[interaction.channelId] = editPermChannel
+      guildHolder.setConfig('edit_permission_channel', conf)
+    }
+    this.replySilent(interaction, 'Set!')
   }
 
   static async observeExistingServer (name, interaction, bot) {
@@ -183,6 +226,7 @@ module.exports = class MCOCommand {
     }
     interaction.reply({ content: `Listing ${list.length} servers...`, ephemeral: listAll })
 
+    const canEdit = Utils.hasEditPerms(interaction, bot)
     list.forEach((server) => {
       const embed = new MessageEmbed()
         .setColor(server.getStatusColor())
@@ -208,68 +252,75 @@ module.exports = class MCOCommand {
       embed.addField('Watched By', server.getWatchedBy().length ? server.getWatchedBy().map(o => `<#${o}>`).join('') : 'None', false)
 
       const components = []
-      components.push(
-        new MessageButton()
-          .setCustomId(`settings|${server.getName()}`)
-          .setLabel('Settings')
-          .setStyle('SECONDARY')
-      )
-      if (server.isWatchedBy(interaction.channelId)) {
+
+      if (canEdit) {
         components.push(
           new MessageButton()
-            .setCustomId(`unwatch|${server.getName()}`)
-            .setLabel('Unwatch')
+            .setCustomId(`settings|${server.getName()}`)
+            .setLabel('Settings')
             .setStyle('SECONDARY')
         )
-        if (!listAll && server.getWatchedBy().length <= 1) {
-          components.push(
-            new MessageButton()
-              .setCustomId(`delete|${server.getName()}`)
-              .setLabel('Delete')
-              .setStyle('DANGER')
-          )
-        }
-      } else {
-        components.push(
-          new MessageButton()
-            .setCustomId(`watch|${server.getName()}`)
-            .setLabel('Watch')
-            .setStyle('PRIMARY')
-        )
-        if (!listAll && server.getWatchedBy().length === 0) {
-          components.push(
-            new MessageButton()
-              .setCustomId(`delete|${server.getName()}`)
-              .setLabel('Delete')
-              .setStyle('DANGER')
-          )
-        }
-      }
 
-      if (listAll) {
-        if (server.getWatchedBy().length > 0) {
+        if (server.isWatchedBy(interaction.channelId)) {
           components.push(
             new MessageButton()
-              .setCustomId(`unwatch_all|${server.getName()}`)
-              .setLabel('Unwatch All')
+              .setCustomId(`unwatch|${server.getName()}`)
+              .setLabel('Unwatch')
               .setStyle('SECONDARY')
           )
+          if (!listAll && server.getWatchedBy().length <= 1) {
+            components.push(
+              new MessageButton()
+                .setCustomId(`delete|${server.getName()}`)
+                .setLabel('Delete')
+                .setStyle('DANGER')
+            )
+          }
+        } else {
+          components.push(
+            new MessageButton()
+              .setCustomId(`watch|${server.getName()}`)
+              .setLabel('Watch')
+              .setStyle('PRIMARY')
+          )
+          if (!listAll && server.getWatchedBy().length === 0) {
+            components.push(
+              new MessageButton()
+                .setCustomId(`delete|${server.getName()}`)
+                .setLabel('Delete')
+                .setStyle('DANGER')
+            )
+          }
         }
 
-        components.push(
-          new MessageButton()
-            .setCustomId(`delete|${server.getName()}`)
-            .setLabel('Delete')
-            .setStyle('DANGER')
-        )
+        if (listAll) {
+          if (server.getWatchedBy().length > 0) {
+            components.push(
+              new MessageButton()
+                .setCustomId(`unwatch_all|${server.getName()}`)
+                .setLabel('Unwatch All')
+                .setStyle('SECONDARY')
+            )
+          }
+
+          components.push(
+            new MessageButton()
+              .setCustomId(`delete|${server.getName()}`)
+              .setLabel('Delete')
+              .setStyle('DANGER')
+          )
+        }
       }
 
-      const row = new MessageActionRow()
-        .addComponents(components)
-
-      const obj = { embeds: [embed], components: [row], ephemeral: listAll }
+      const obj = { embeds: [embed], ephemeral: listAll }
       if (server.getIconCached().file) {
         obj.files = [server.getIconCached().file]
+      }
+
+      if (components.length) {
+        const rows = new MessageActionRow()
+          .addComponents(components)
+        obj.components = [rows]
       }
       interaction.followUp(obj)
     })

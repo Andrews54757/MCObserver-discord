@@ -1,12 +1,18 @@
 const TrackedServer = require('./track/TrackedServer')
 const fs = require('fs/promises')
 const Path = require('path')
+const EditPerms = require('./enum/EditPerms')
 class GuildHolder {
   constructor (guild, bot) {
     this.guild = guild
     this.bot = bot
 
     this.watchedServers = new Map()
+
+    this.config = {
+      edit_permission_default: EditPerms.ALLOWED,
+      edit_permission_channel: {}
+    }
 
     this.loadData().catch(e => {
       console.log('Could not load config for guild ' + this.guild.name)
@@ -16,6 +22,15 @@ class GuildHolder {
   async getChannels (list) {
     const channels = await Promise.allSettled(list.map((channelId) => this.guild.channels.fetch(channelId)))
     return channels.filter((o) => o.status === 'fulfilled').map((o) => o.value)
+  }
+
+  getConfig (config) {
+    return this.config[config]
+  }
+
+  setConfig (config, value) {
+    this.config[config] = value
+    this.markChanged()
   }
 
   async loadData () {
@@ -29,6 +44,11 @@ class GuildHolder {
       trackedServer.channelSettings = server.channelSettings || {}
       this.watchedServers.set(server.name, trackedServer)
     })
+    if (data.config) {
+      for (const prop in data.config) {
+        this.config[prop] = data.config[prop]
+      }
+    }
     console.log(`loaded ${data.servers.length} servers for guild ${this.guild.name}`)
   }
 
@@ -43,6 +63,7 @@ class GuildHolder {
         name: this.guild.name,
         id: this.guild.id,
         timestamp: Date.now(),
+        config: this.config,
         servers: []
       }
       this.watchedServers.forEach((server) => {
