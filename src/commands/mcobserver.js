@@ -235,9 +235,9 @@ module.exports = class MCOCommand {
     }
 
     if (trackedServer.watch(interaction.channelId)) {
-      interaction.reply({ content: `Watching server ${name} (${trackedServer.getDisplayAddress()})!`, ephemeral: options.isAddressPrivate })
+      interaction.reply({ content: `Watching server ${name} (${trackedServer.getDisplayAddress(true)})!`, ephemeral: options.isAddressPrivate })
     } else {
-      this.replySilent(interaction, `Already watching server ${name} (${trackedServer.getDisplayAddress()})!`)
+      this.replySilent(interaction, `Already watching server ${name} (${trackedServer.getDisplayAddress(true)})!`)
     }
   }
 
