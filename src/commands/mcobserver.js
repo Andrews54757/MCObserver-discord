@@ -375,8 +375,9 @@ module.exports = class MCOCommand {
     interaction.reply({ content: `Listed ${list.length} servers!`, ephemeral: listAll })
 
     const canEdit = Utils.hasEditPerms(interaction, bot)
+    const isAdmin = Utils.hasPerms(interaction)
     list.forEach((server) => {
-      const content = this.getContentForServer(server, server.isWatchedBy(interaction.channelId), listAll, canEdit)
+      const content = this.getContentForServer(server, server.isWatchedBy(interaction.channelId), isAdmin, canEdit)
       content.ephemeral = true
       interaction.followUp(content)
     })
