@@ -326,7 +326,7 @@ module.exports = class MCOCommand {
       }
     }
 
-    const obj = { embeds: [embed] }
+    const obj = { embeds: [embed], ephemeral: isAdmin }
     if (server.getIconCached().file) {
       obj.files = [server.getIconCached().file]
     }
@@ -354,7 +354,7 @@ module.exports = class MCOCommand {
         return
       }
 
-      interaction.reply(this.getContentForServer(trackedServer, trackedServer.isWatchedBy(interaction.channelId), isAdmin, canEdit))
+      interaction.reply(this.getContentForServer(trackedServer, trackedServer.isWatchedBy(interaction.channelId), false, canEdit))
     }
   }
 
