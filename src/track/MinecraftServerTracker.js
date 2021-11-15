@@ -61,8 +61,11 @@ class MinecraftServerTracker {
     try {
       result = await MinecraftStatusQuery.queryServerProxied(this.hostname, this.port)
     } catch (e) {
-      this.setPropertyWithEvent('status', 'onStatusChange', ServerStatus.OFFLINE)
       this.failed_attempts++
+
+      if (this.failed_attempts > 5) {
+        this.setPropertyWithEvent('status', 'onStatusChange', ServerStatus.OFFLINE)
+      }
       return
     }
     this.failed_attempts = 0
