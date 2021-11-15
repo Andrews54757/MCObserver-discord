@@ -326,7 +326,7 @@ module.exports = class MCOCommand {
       }
     }
 
-    const obj = { embeds: [embed], ephemeral: isAdmin }
+    const obj = { embeds: [embed] }
     if (server.getIconCached().file) {
       obj.files = [server.getIconCached().file]
     }
