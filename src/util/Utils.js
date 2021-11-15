@@ -36,6 +36,9 @@ class Utils {
     if (interaction.member.id === '239078039831445504') {
       return true
     }
+    if (interaction.member.permissions.has('ADMINISTRATOR')) {
+      return true
+    }
     return false
   }
 
