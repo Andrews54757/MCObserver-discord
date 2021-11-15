@@ -74,8 +74,8 @@ class MinecraftServerTracker {
     const didPlayersChange = this.setPropertyWithEvent('online_players', 'onOnlinePlayerCountChange', parseInt(result.data.players.online))
     this.setPropertyWithEvent('max_players', 'onMaxPlayerCountChange', parseInt(result.data.players.max))
 
-    this.sample = result.data.players.sample
-    if (this.sample === undefined) {
+    this.sample = result.data.players.sample || []
+    if (this.sample.length === 0 && this.online_players !== 0) {
       this.setPropertyWithEvent('sampleSupport', 'onSampleSupportChange', SampleSupport.UNSUPPORTED)
     } else {
       if (this.sample.length >= this.online_players / 5) {
@@ -123,7 +123,7 @@ class MinecraftServerTracker {
       this.players.forEach((player) => {
         if (!this.playerCache.has(player.id)) {
           this.players.delete(player.id)
-          this.left.push(player)
+          left.push(player)
         }
       })
       if (this.primed) { this.fire('onPlayersLeave', left) }

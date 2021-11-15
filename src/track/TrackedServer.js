@@ -191,6 +191,8 @@ class TrackedServer {
       .setThumbnail(icon.url)
       .setTimestamp()
 
+    embed.setDescription(this.getOnlineCount() + '/' + this.getMaxCount() + ' online')
+
     const obj = {
       embeds: [embed]
     }
@@ -213,6 +215,8 @@ class TrackedServer {
         .setTitle(`Joined ${this.getName()}`)
         .setThumbnail(icon.url)
         .setTimestamp()
+
+      embed.setDescription(this.getOnlineCount() + '/' + this.getMaxCount() + ' online')
 
       const obj = {
         embeds: [embed]
