@@ -241,7 +241,7 @@ module.exports = class MCOCommand {
     }
   }
 
-  static async getContentForServer (server, isWatched, isAdmin, canEdit) {
+  static getContentForServer (server, isWatched, isAdmin, canEdit) {
     const embed = new MessageEmbed()
       .setColor(server.getStatusColor())
       .setTitle(`${server.getName()}${(server.isAddressPrivate() && !isAdmin) ? '' : ` (${server.getDisplayAddress(true)})`}`)
