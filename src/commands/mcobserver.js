@@ -29,6 +29,16 @@ module.exports = class MCOCommand {
       )
       .addSubcommand(subcommand =>
         subcommand
+          .setName('status')
+          .setDescription('Show status for a minecraft server')
+          .addStringOption(option =>
+            option.setName('name')
+              .setDescription('Name of server to observe')
+              .setRequired(true)
+          )
+      )
+      .addSubcommand(subcommand =>
+        subcommand
           .setName('list')
           .setDescription('List watched minecraft servers')
       )
@@ -86,6 +96,21 @@ module.exports = class MCOCommand {
         } else {
           this.observeExistingServer(name, interaction, bot)
         }
+        break
+      }
+      case 'status': {
+        const unfilteredName = interaction.options.getString('name')
+        const name = unfilteredName.replace(/[^a-zA-Z0-9_\-[\]()]/g, '')
+
+        if (!name || name.length === 0 || name.length > 40) {
+          if (name !== unfilteredName) {
+            this.replySilent(interaction, `'${unfilteredName}' (escaped to '${name}') is not a valid name!`)
+          } else {
+            this.replySilent(interaction, 'Please supply a valid name!')
+          }
+          return
+        }
+        this.getStatusOfServer(name, interaction, bot)
         break
       }
       case 'list': {
@@ -216,6 +241,123 @@ module.exports = class MCOCommand {
     }
   }
 
+  static async getContentForServer (server, isWatched, isAdmin, canEdit) {
+    const embed = new MessageEmbed()
+      .setColor(server.getStatusColor())
+      .setTitle(`${server.getName()}${(server.isAddressPrivate() && !isAdmin) ? '' : ` (${server.getDisplayAddress(true)})`}`)
+      .setThumbnail(server.getIconCached().url)
+
+    if (server.getMotd()) {
+      embed.setDescription(server.getMotd().toString())
+    }
+    if (server.getStatus() === ServerStatus.ONLINE) {
+      embed.addField('Online', server.getOnlineCount() + '/' + server.getMaxCount(), true)
+      embed.addField('Latency', server.getLatency() + 'ms', true)
+      embed.addField('Version', server.getVersion().toString(), true)
+    } else {
+      embed.addField('Offline', server.getFailedAttempts() + ' failed attempts', true)
+    }
+
+    const players = server.getPlayerList()
+    if (players.length) {
+      embed.addField('Players', players.map((player) => `${player.name} (${formatTime(Math.floor((Date.now() - player.joined_time) / 1000))})`).join(', '), true)
+    }
+
+    embed.addField('Watched By', server.getWatchedBy().length ? server.getWatchedBy().map(o => `<#${o}>`).join('') : 'None', false)
+
+    const components = []
+
+    if (canEdit) {
+      components.push(
+        new MessageButton()
+          .setCustomId(`settings|${server.getName()}`)
+          .setLabel('Settings')
+          .setStyle('SECONDARY')
+      )
+
+      if (isWatched) {
+        components.push(
+          new MessageButton()
+            .setCustomId(`unwatch|${server.getName()}`)
+            .setLabel('Unwatch')
+            .setStyle('SECONDARY')
+        )
+        if (!isAdmin && server.getWatchedBy().length <= 1) {
+          components.push(
+            new MessageButton()
+              .setCustomId(`delete|${server.getName()}`)
+              .setLabel('Delete')
+              .setStyle('DANGER')
+          )
+        }
+      } else {
+        components.push(
+          new MessageButton()
+            .setCustomId(`watch|${server.getName()}`)
+            .setLabel('Watch')
+            .setStyle('PRIMARY')
+        )
+        if (!isAdmin && server.getWatchedBy().length === 0) {
+          components.push(
+            new MessageButton()
+              .setCustomId(`delete|${server.getName()}`)
+              .setLabel('Delete')
+              .setStyle('DANGER')
+          )
+        }
+      }
+
+      if (isAdmin) {
+        if (server.getWatchedBy().length > 0) {
+          components.push(
+            new MessageButton()
+              .setCustomId(`unwatch_all|${server.getName()}`)
+              .setLabel('Unwatch All')
+              .setStyle('SECONDARY')
+          )
+        }
+
+        components.push(
+          new MessageButton()
+            .setCustomId(`delete|${server.getName()}`)
+            .setLabel('Delete')
+            .setStyle('DANGER')
+        )
+      }
+    }
+
+    const obj = { embeds: [embed], ephemeral: isAdmin }
+    if (server.getIconCached().file) {
+      obj.files = [server.getIconCached().file]
+    }
+
+    if (components.length) {
+      const rows = new MessageActionRow()
+        .addComponents(components)
+      obj.components = [rows]
+    }
+    return obj
+  }
+
+  static async getStatusOfServer (name, interaction, bot) {
+    const guildId = interaction.guildId
+    const guildHolder = bot.getGuildHolder(guildId)
+    const trackedServer = guildHolder.getServer(name)
+
+    const isAdmin = Utils.hasPerms(interaction)
+    const canEdit = Utils.hasEditPerms(interaction, bot)
+    if (!trackedServer) {
+      this.replySilent(interaction, `Server ${name} does not exist!`)
+    } else {
+      if (!trackedServer.canUse(interaction.channelId) && !isAdmin) {
+        this.replySilent(interaction, `Server ${name} is private!`)
+        return
+      }
+
+      interaction.reply(this.getContentForServer(trackedServer, trackedServer.isWatchedBy(interaction.channelId), isAdmin, canEdit))
+    }
+  }
+
   static async listServers (listAll, interaction, bot) {
     const guildId = interaction.guildId
     const guildHolder = bot.getGuildHolder(guildId)
@@ -234,101 +376,8 @@ module.exports = class MCOCommand {
 
     const canEdit = Utils.hasEditPerms(interaction, bot)
     list.forEach((server) => {
-      const embed = new MessageEmbed()
-        .setColor(server.getStatusColor())
-        .setTitle(`${server.getName()}${(server.isAddressPrivate() && !listAll) ? '' : ` (${server.getDisplayAddress(true)})`}`)
-        .setThumbnail(server.getIconCached().url)
-
-      if (server.getMotd()) {
-        embed.setDescription(server.getMotd().toString())
-      }
-      if (server.getStatus() === ServerStatus.ONLINE) {
-        embed.addField('Online', server.getOnlineCount() + '/' + server.getMaxCount(), true)
-        embed.addField('Latency', server.getLatency() + 'ms', true)
-        embed.addField('Version', server.getVersion().toString(), true)
-      } else {
-        embed.addField('Offline', server.getFailedAttempts() + ' failed attempts', true)
-      }
-
-      const players = server.getPlayerList()
-      if (players.length) {
-        embed.addField('Players', players.map((player) => `${player.name} (${formatTime(Math.floor((Date.now() - player.joined_time) / 1000))})`).join(', '), true)
-      }
-
-      embed.addField('Watched By', server.getWatchedBy().length ? server.getWatchedBy().map(o => `<#${o}>`).join('') : 'None', false)
-
-      const components = []
-
-      if (canEdit) {
-        components.push(
-          new MessageButton()
-            .setCustomId(`settings|${server.getName()}`)
-            .setLabel('Settings')
-            .setStyle('SECONDARY')
-        )
-
-        if (server.isWatchedBy(interaction.channelId)) {
-          components.push(
-            new MessageButton()
-              .setCustomId(`unwatch|${server.getName()}`)
-              .setLabel('Unwatch')
-              .setStyle('SECONDARY')
-          )
-          if (!listAll && server.getWatchedBy().length <= 1) {
-            components.push(
-              new MessageButton()
-                .setCustomId(`delete|${server.getName()}`)
-                .setLabel('Delete')
-                .setStyle('DANGER')
-            )
-          }
-        } else {
-          components.push(
-            new MessageButton()
-              .setCustomId(`watch|${server.getName()}`)
-              .setLabel('Watch')
-              .setStyle('PRIMARY')
-          )
-          if (!listAll && server.getWatchedBy().length === 0) {
-            components.push(
-              new MessageButton()
-                .setCustomId(`delete|${server.getName()}`)
-                .setLabel('Delete')
-                .setStyle('DANGER')
-            )
-          }
-        }
-
-        if (listAll) {
-          if (server.getWatchedBy().length > 0) {
-            components.push(
-              new MessageButton()
-                .setCustomId(`unwatch_all|${server.getName()}`)
-                .setLabel('Unwatch All')
-                .setStyle('SECONDARY')
-            )
-          }
-
-          components.push(
-            new MessageButton()
-              .setCustomId(`delete|${server.getName()}`)
-              .setLabel('Delete')
-              .setStyle('DANGER')
-          )
-        }
-      }
-
-      const obj = { embeds: [embed], ephemeral: listAll }
-      if (server.getIconCached().file) {
-        obj.files = [server.getIconCached().file]
-      }
-
-      if (components.length) {
-        const rows = new MessageActionRow()
-          .addComponents(components)
-        obj.components = [rows]
-      }
-      interaction.followUp(obj)
+      const content = this.getContentForServer(server, server.isWatchedBy(interaction.channelId), listAll, canEdit)
+      interaction.followUp(content)
     })
   }
 }
