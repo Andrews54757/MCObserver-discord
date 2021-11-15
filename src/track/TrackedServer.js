@@ -75,7 +75,7 @@ class TrackedServer {
 
   async getChannelsToSend (enumObj) {
     return await this.guildHolder.getChannels(this.getWatchedBy().filter((channelId) => {
-      const settings = this.getChannelSettings(channelId)
+      const settings = this.getChannelSettings(channelId) || {}
       if (settings[enumObj.value] !== undefined) {
         return settings[enumObj.value]
       }
