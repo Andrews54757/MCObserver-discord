@@ -242,7 +242,7 @@ class TrackedServer {
         .setThumbnail(icon.url)
         .setTimestamp()
 
-      embed.addField('Playtime', formatTime(Math.floor(Date.now() - player.joined_time) / 1000))
+      embed.addField('Playtime', formatTime(Math.floor((Date.now() - player.joined_time) / 1000)))
       const obj = {
         embeds: [embed]
       }
