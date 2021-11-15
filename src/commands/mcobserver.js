@@ -200,6 +200,12 @@ module.exports = class MCOCommand {
       this.replySilent(interaction, 'Modification success!')
       return
     } else {
+      const max = bot.config.maxServersPerGuild || 20
+      if (guildHolder.getServers().length >= max) {
+        this.replySilent(interaction, `Maximum of ${max} servers allowed!`)
+        return
+      }
+
       trackedServer = guildHolder.addServer(name, hostname, port, options)
     }
 

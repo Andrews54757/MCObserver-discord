@@ -2,7 +2,6 @@ const { MessageAttachment, MessageEmbed } = require('discord.js')
 const SampleSupport = require('../enum/SampleSupport')
 const ServerStatus = require('../enum/ServerStatus')
 const WatchOptions = require('../enum/WatchOptions')
-const { formatTime } = require('../util/Utils')
 const Utils = require('../util/Utils')
 
 class TrackedServer {
