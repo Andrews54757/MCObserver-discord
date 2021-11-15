@@ -191,8 +191,6 @@ class TrackedServer {
       .setThumbnail(icon.url)
       .setTimestamp()
 
-    embed.setDescription(this.getOnlineCount() + '/' + this.getMaxCount() + ' online')
-
     const obj = {
       embeds: [embed]
     }
@@ -242,7 +240,9 @@ class TrackedServer {
         .setThumbnail(icon.url)
         .setTimestamp()
 
-      embed.addField('Playtime', formatTime(Math.floor((Date.now() - player.joined_time) / 1000)))
+      // embed.addField('Playtime', formatTime(Math.floor((Date.now() - player.joined_time) / 1000)))
+      embed.setDescription(this.getOnlineCount() + '/' + this.getMaxCount() + ' online')
+
       const obj = {
         embeds: [embed]
       }
