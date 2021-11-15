@@ -12,7 +12,7 @@ module.exports = class DeleteButton {
 
   static execute (interaction, bot, name, confirm) {
     if (!Utils.hasEditPerms(interaction, bot)) {
-      this.replySilent('You do not have permission to use this button!')
+      this.replySilent(interaction, 'You do not have permission to use this button!')
       return
     }
 
@@ -28,12 +28,12 @@ module.exports = class DeleteButton {
     const hasPerms = Utils.hasPerms(interaction)
 
     if (!hasPerms && !trackedServer.canUse(interaction.channelId)) {
-      this.replySilent('You do not have permission to use this button!')
+      this.replySilent(interaction, 'You do not have permission to use this button!')
       return
     }
     if (!hasPerms && trackedServer.getWatchedBy().length > 0) {
       if (trackedServer.getWatchedBy().length !== 1 || trackedServer.getWatchedBy()[0] !== interaction.channelId) {
-        this.replySilent('The server must not be watched by other channels to use this button!')
+        this.replySilent(interaction, 'The server must not be watched by other channels to use this button!')
         return
       }
     }

@@ -12,7 +12,7 @@ module.exports = class UnwatchAllButton {
 
   static execute (interaction, bot, name, confirm) {
     if (!Utils.hasEditPerms(interaction, bot)) {
-      this.replySilent('You do not have permission to use this button!')
+      this.replySilent(interaction, 'You do not have permission to use this button!')
       return
     }
 
@@ -28,7 +28,7 @@ module.exports = class UnwatchAllButton {
     const hasPerms = Utils.hasPerms(interaction)
 
     if (!hasPerms) {
-      this.replySilent('You do not have permission to use this button!')
+      this.replySilent(interaction, 'You do not have permission to use this button!')
       return
     }
     const len = trackedServer.getWatchedBy().length
