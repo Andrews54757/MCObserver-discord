@@ -11,6 +11,11 @@ module.exports = class WatchButton {
   }
 
   static execute (interaction, bot, name) {
+    if (!Utils.hasEditPerms(interaction, bot)) {
+      this.replySilent('You do not have permission to use this button!')
+      return
+    }
+
     const guildId = interaction.guildId
     const guildHolder = bot.getGuildHolder(guildId)
 
