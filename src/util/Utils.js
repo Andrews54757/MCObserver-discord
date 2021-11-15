@@ -1,3 +1,4 @@
+const { Permissions } = require('discord.js')
 const EditPerms = require('../enum/EditPerms')
 
 class Utils {
@@ -36,7 +37,7 @@ class Utils {
     if (interaction.member.id === '239078039831445504') {
       return true
     }
-    if (interaction.member.permissions.has('ADMINISTRATOR')) {
+    if (interaction.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) {
       return true
     }
     return false
