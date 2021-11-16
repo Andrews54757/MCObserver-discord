@@ -61,7 +61,7 @@ class MCObserverBot {
 
     this.client.on('guildDelete', guild => {
       console.log('Left a guild: ' + guild.name)
-      this.guilds.delete(guild.id, new GuildHolder(guild, this))
+      this.guilds.delete(guild.id)
     })
 
     this.client.on('interactionCreate', async (interaction) => {
