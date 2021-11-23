@@ -31,7 +31,7 @@ module.exports = class WatchButton {
     }
 
     if (trackedServer.isWatchedBy(interaction.channelId)) {
-      this.replySilent(`'${name}' is already being watched by this channel!`)
+      this.replySilent(interaction, `'${name}' is already being watched by this channel!`)
       return
     }
 

@@ -26,7 +26,7 @@ module.exports = class UnwatchButton {
     }
 
     if (!trackedServer.isWatchedBy(interaction.channelId)) {
-      this.replySilent(`'${name}' is not being watched by this channel!`)
+      this.replySilent(interaction, `'${name}' is not being watched by this channel!`)
       return
     }
 
