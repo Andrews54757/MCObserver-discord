@@ -67,9 +67,9 @@ module.exports = class WatchButton {
     }
 
     if (str.length) {
-      interaction.reply(`${str.join(' and ')} for logging '${name}'`)
+      interaction.reply(`<@${interaction.user.id}> ${str.join(' and ')} for logging '${name}'`)
     } else {
-      interaction.reply(`No settings changed for server '${name}'`)
+      this.replySilent(interaction, `No settings changed for server '${name}'`)
     }
   }
 }

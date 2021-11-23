@@ -44,6 +44,6 @@ module.exports = class WatchButton {
           .setLabel(`Unwatch '${name}'`)
           .setStyle('SECONDARY')
       )
-    interaction.reply({ content: `Watching '${name}' in this channel`, components: [row] })
+    interaction.reply({ content: `<@${interaction.user.id}> Watching '${name}' in this channel`, components: [row] })
   }
 }

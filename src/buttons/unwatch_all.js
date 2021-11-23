@@ -34,7 +34,7 @@ module.exports = class UnwatchAllButton {
     const len = trackedServer.getWatchedBy().length
     if (confirm) {
       trackedServer.unwatchAll()
-      interaction.reply(`Unwatched '${name}' for ${len} channels`)
+      interaction.reply(`<@${interaction.user.id}> Unwatched '${name}' for ${len} channels`)
     } else {
       const row = new MessageActionRow()
         .addComponents(

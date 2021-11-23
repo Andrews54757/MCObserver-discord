@@ -41,7 +41,7 @@ module.exports = class DeleteButton {
     if (confirm) {
       trackedServer.unwatchAll()
       guildHolder.removeServer(name)
-      interaction.reply(`Deleted server '${name}' and unwatched for ${len} channels`)
+      interaction.reply(`<@${interaction.user.id}> Deleted server '${name}' and unwatched for ${len} channels`)
     } else {
       const row = new MessageActionRow()
         .addComponents(
