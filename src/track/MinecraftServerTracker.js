@@ -60,6 +60,7 @@ class MinecraftServerTracker {
     let result
     try {
       result = await MinecraftStatusQuery.queryServerProxied(this.hostname, this.port)
+      if (!result || !result.data || !result.data.version || !result.data.players) throw "Invalid data";
     } catch (e) {
       this.failed_attempts++
 
