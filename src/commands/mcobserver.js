@@ -254,11 +254,11 @@ module.exports = class MCOCommand {
       embed.addField('Online', server.getOnlineCount() + '/' + server.getMaxCount(), true)
       embed.addField('Latency', server.getLatency() + 'ms', true)
       embed.addField('Version', server.getVersion().toString(), true)
-      embed.addField('Sample Support', server.getSampleSupport().toString(), true);
+      embed.addField('Sample', server.getSampleSupport().toString(), true);
 
       const players = server.getPlayerList()
       if (players.length) {
-        embed.addField('Players', players.map((player) => `${player.name} (${formatTime(Math.floor((Date.now() - player.joined_time) / 1000))})`).join(', '), true)
+        embed.addField('Players', players.map((player) => `${player.name} (${formatTime(Math.floor((Date.now() - player.joined_time) / 1000))})`).join(', '), false)
       }
     } else {
       embed.addField('Offline', server.getFailedAttempts() + ' failed attempts', true)
