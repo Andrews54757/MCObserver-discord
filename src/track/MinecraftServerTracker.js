@@ -67,6 +67,8 @@ class MinecraftServerTracker {
 
       if (this.failed_attempts > 5) {
         this.setPropertyWithEvent('status', 'onStatusChange', ServerStatus.OFFLINE)
+        this.playerCache.clear();
+        this.players.clear();
       }
       return
     }

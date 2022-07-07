@@ -395,6 +395,10 @@ class TrackedServer {
     return this.watchedBy
   }
 
+  getSampleSupport() {
+    return this.tracker.sampleSupport;
+  }
+
   isWatchedBy (channelId) {
     return this.watchedBy.includes(channelId)
   }
