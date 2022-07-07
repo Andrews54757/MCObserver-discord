@@ -1,9 +1,9 @@
 const SampleSupport = {
-  UNKNOWN: 'unknown',
-  SUPPORTED: 'supported',
-  ANON_BOMBED: 'anon-bombed',
-  OVERSATURATED: 'oversaturated',
-  UNSUPPORTED: 'unsupported'
+  UNKNOWN: 'Unknown',
+  SUPPORTED: 'Supported',
+  ANON_BOMBED: 'Anon-bombed',
+  OVERSATURATED: 'Oversaturated',
+  UNSUPPORTED: 'Unsupported'
 }
 
 module.exports = SampleSupport
