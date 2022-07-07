@@ -248,7 +248,7 @@ class TrackedServer {
         .setTimestamp()
 
       if (player.id === Constants.ANAONYMOUS_UUID) {
-        embed.setAuthor(player.name, 'https://minotar.net/helm/069a79f444e94726a5befca90e38aaf5/100.png', `https://www.youtube.com/watch?v=dQw4w9WgXcQ`)
+        embed.setAuthor(player.name, 'https://minotar.net/helm/069a79f444e94726a5befca90e38aaf5/100.png', Constants.RICK)
       } else {
         embed.setAuthor(player.name, 'https://minotar.net/helm/' + player.id.replace(/-/g, '') + '/100.png', `https://namemc.com/profile/${player.name}`)
       }
@@ -279,7 +279,7 @@ class TrackedServer {
         .setTimestamp()
 
       if (player.id === Constants.ANAONYMOUS_UUID) {
-        embed.setAuthor(player.name, 'https://minotar.net/helm/069a79f444e94726a5befca90e38aaf5/100.png', `https://www.youtube.com/watch?v=dQw4w9WgXcQ`)
+        embed.setAuthor(player.name, 'https://minotar.net/helm/069a79f444e94726a5befca90e38aaf5/100.png', Constants.RICK)
       } else {
         embed.setAuthor(player.name, 'https://minotar.net/helm/' + player.id.replace(/-/g, '') + '/100.png', `https://namemc.com/profile/${player.name}`)
       }
