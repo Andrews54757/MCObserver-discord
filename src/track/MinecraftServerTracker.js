@@ -1,3 +1,4 @@
+const Constants = require('../enum/Constants')
 const SampleSupport = require('../enum/SampleSupport')
 const ServerStatus = require('../enum/ServerStatus')
 const MinecraftStatusQuery = require('../util/MinecraftStatusQuery')
@@ -88,10 +89,11 @@ class MinecraftServerTracker {
       }
     }
 
-    if (this.sampleSupport === SampleSupport.SUPPORTED) {
+    if (this.sampleSupport === SampleSupport.SUPPORTED || this.sampleSupport === SampleSupport.ANON_BOMBED) {
       this.sample.forEach((player) => {
         this.playerCache.set(player.id, player)
       })
+      const hasAnonymous = this.playerCache.has(Constants.ANAONYMOUS_UUID);
       if (this.sample.size < this.online_players) {
         this.updatePlayerList(!didPlayersChange && this.playerCache.size === this.online_players)
         if (!didPlayersChange && this.playerCache.size === this.online_players) this.primed = true
@@ -99,10 +101,18 @@ class MinecraftServerTracker {
         if (didPlayersChange || this.playerCache.size >= this.online_players) {
           this.playerCache.clear()
         }
+
+        if (hasAnonymous) {
+          this.setPropertyWithEvent('sampleSupport', 'onSampleSupportChange', SampleSupport.ANON_BOMBED);
+        }
       } else {
         this.updatePlayerList(true)
         this.primed = true
-        this.playerCache.clear()
+        this.playerCache.clear();
+
+        if (this.sampleSupport === SampleSupport.ANON_BOMBED) {
+          this.setPropertyWithEvent('sampleSupport', 'onSampleSupportChange', SampleSupport.SUPPORTED);
+        }
       }
     } else {
       this.primed = true
@@ -113,8 +123,9 @@ class MinecraftServerTracker {
   updatePlayerList (canDelete) {
     const joined = []
     this.playerCache.forEach((player) => {
+      player.last_seen_time = Date.now();
       if (!this.players.has(player.id)) {
-        player.joined_time = Date.now()
+        player.joined_time = Date.now();
         this.players.set(player.id, player)
         joined.push(player)
       }
@@ -127,6 +138,11 @@ class MinecraftServerTracker {
         if (!this.playerCache.has(player.id)) {
           this.players.delete(player.id)
           left.push(player)
+        } else if (this.sampleSupport === SampleSupport.ANON_BOMBED) {
+          if (player.last_seen_time + 1000 * 60 * 5 < Date.now()) {
+            this.players.delete(player.id)
+            left.push(player)
+          }
         }
       })
       if (this.primed) { this.fire('onPlayersLeave', left) }

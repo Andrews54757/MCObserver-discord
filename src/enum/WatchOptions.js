@@ -5,6 +5,12 @@ const WatchOptions = {
     description: 'Logs server status changes',
     default: true
   },
+  SAMPLE_SUPPORT: {
+    value: 'samplesupport',
+    name: 'Sample Support',
+    description: 'Logs changes in sample-based player list support',
+    default: true
+  },
   PLAYER_JOIN: {
     value: 'playerjoin',
     name: 'Player Join',

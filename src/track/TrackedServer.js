@@ -1,4 +1,5 @@
 const { MessageAttachment, MessageEmbed } = require('discord.js')
+const Constants = require('../enum/Constants')
 const SampleSupport = require('../enum/SampleSupport')
 const ServerStatus = require('../enum/ServerStatus')
 const WatchOptions = require('../enum/WatchOptions')
@@ -86,6 +87,40 @@ class TrackedServer {
     channels.forEach((channel) => {
       channel.send(obj)
     })
+  }
+
+  async onSampleSupportChange(value, prevValue) {
+    const channels = await this.getChannelsToSend(WatchOptions.SAMPLE_SUPPORT)
+    if (channels.length === 0) return
+    const icon = this.getIconCached()
+    const embed = new MessageEmbed()
+    let msg = '';
+    if (value === SampleSupport.ANON_BOMBED) {
+      msg = "Player leave events are disabled temporarily. There are Anonymous Players preventing the bot from collecting accurate playerlist data."
+    } else if (value === SampleSupport.SUPPORTED) {
+      msg = "Player join/leave events are fully supported."
+    } else if (value === SampleSupport.UNSUPPORTED) { 
+      msg = "Player join/leave events are not supported. The server is not broadcasting player list samples."
+    } else if (value === SampleSupport.OVERSATURATED) {
+      msg = "Player join/leave events are not supported. The server is broadcasting player list samples, but the number of players is too high."
+    }
+
+    embed.setColor(this.getStatusColor())
+      .setTitle(this.getName() + ' is now ' + value)
+      .setDescription(msg)
+      .setThumbnail(icon.url)
+      .setTimestamp();
+
+    if (prevValue) { embed.addField('Previously', prevValue); }
+
+    const obj = {
+      embeds: [embed]
+    }
+    if (icon.file) {
+      obj.files = [icon.file]
+    }
+
+    this.sendToChannels(channels, obj)
   }
 
   async onStatusChange (value, prevValue) {
@@ -201,17 +236,22 @@ class TrackedServer {
   }
 
   async onPlayersJoin (players) {
-    if (this.tracker.sampleSupport !== SampleSupport.SUPPORTED) return
+    if (this.tracker.sampleSupport !== SampleSupport.SUPPORTED && this.tracker.sampleSupport !== SampleSupport.ANON_BOMBED) return;
     const channels = await this.getChannelsToSend(WatchOptions.PLAYER_JOIN)
     if (channels.length === 0) return
     players.forEach((player) => {
       const icon = this.getIconCached()
       const embed = new MessageEmbed()
       embed.setColor('#0099ff')
-        .setAuthor(player.name, 'https://minotar.net/helm/' + player.id.replace(/-/g, '') + '/100.png', `https://namemc.com/profile/${player.name}`)
         .setTitle(`Joined ${this.getName()}`)
         .setThumbnail(icon.url)
         .setTimestamp()
+
+      if (player.id === Constants.ANAONYMOUS_UUID) {
+        embed.setAuthor(player.name, 'https://minotar.net/helm/069a79f444e94726a5befca90e38aaf5/100.png', `https://www.youtube.com/watch?v=dQw4w9WgXcQ`)
+      } else {
+        embed.setAuthor(player.name, 'https://minotar.net/helm/' + player.id.replace(/-/g, '') + '/100.png', `https://namemc.com/profile/${player.name}`)
+      }
 
       embed.setDescription(this.getOnlineCount() + '/' + this.getMaxCount() + ' online')
 
@@ -227,18 +267,22 @@ class TrackedServer {
   }
 
   async onPlayersLeave (players) {
-    if (this.tracker.sampleSupport !== SampleSupport.SUPPORTED) return
+    if (this.tracker.sampleSupport !== SampleSupport.SUPPORTED) return;
     const channels = await this.getChannelsToSend(WatchOptions.PLAYER_LEAVE)
     if (channels.length === 0) return
     players.forEach((player) => {
       const icon = this.getIconCached()
       const embed = new MessageEmbed()
       embed.setColor('#575757')
-        .setAuthor(player.name, 'https://minotar.net/helm/' + player.id.replace(/-/g, '') + '/100.png', `https://namemc.com/profile/${player.name}`)
         .setTitle(`Left ${this.getName()}`)
         .setThumbnail(icon.url)
         .setTimestamp()
 
+      if (player.id === Constants.ANAONYMOUS_UUID) {
+        embed.setAuthor(player.name, 'https://minotar.net/helm/069a79f444e94726a5befca90e38aaf5/100.png', `https://www.youtube.com/watch?v=dQw4w9WgXcQ`)
+      } else {
+        embed.setAuthor(player.name, 'https://minotar.net/helm/' + player.id.replace(/-/g, '') + '/100.png', `https://namemc.com/profile/${player.name}`)
+      }
       // embed.addField('Playtime', formatTime(Math.floor((Date.now() - player.joined_time) / 1000)))
       embed.setDescription(this.getOnlineCount() + '/' + this.getMaxCount() + ' online')
 
@@ -254,7 +298,9 @@ class TrackedServer {
   }
 
   async onOnlinePlayerCountChange (value, prevValue) {
-    if (this.tracker.sampleSupport === SampleSupport.SUPPORTED) return
+    if (this.tracker.sampleSupport === SampleSupport.SUPPORTED) return;
+    if (this.tracker.sampleSupport === SampleSupport.ANON_BOMBED && value >= prevValue) return;
+
     const channels = await this.getChannelsToSend(value > prevValue ? WatchOptions.PLAYER_JOIN : WatchOptions.PLAYER_LEAVE)
     if (channels.length === 0) return
 
