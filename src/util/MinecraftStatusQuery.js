@@ -5,7 +5,7 @@ const net = require('net')
 const timeout = 4
 
 // Proxy server
-const SERVER_URL = 'https://mc-observer-server.glitch.me'
+const SERVER_URL = 'https://mcobserver-server.fly.dev'
 
 /**
  * Shitty minecraft querying code from mcobserver.com
