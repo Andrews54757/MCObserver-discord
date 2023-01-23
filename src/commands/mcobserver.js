@@ -226,7 +226,7 @@ module.exports = class MCOCommand {
       return
     } else {
       const max = bot.config.maxServersPerGuild || 20
-      if (guildHolder.getServers().length >= max) {
+      if (guildHolder.getServers().size >= max) {
         this.replySilent(interaction, `Maximum of ${max} servers allowed!`)
         return
       }
